@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<header th:fragment="navbar" class="navbar">
+    <div class="navbar-left">
+        <a th:href="@{/}" class="logo">YAHOO!</a>
+        <nav class="nav-links">
+            <a th:href="@{/chat}" class="nav-link"
+               th:classappend="${currentPage == 'chat'} ? ' active'">
+               <span class="icon">💬</span> Chat
+            </a>
+            <a th:href="@{/news}" class="nav-link"
+               th:classappend="${currentPage == 'news'} ? ' active'">
+               <span class="icon">📰</span> News
+            </a>
+            <a th:href="@{/profile}" class="nav-link"
+               th:classappend="${currentPage == 'profile'} ? ' active'">
+               <span class="icon">👤</span> Profile
+            </a>
+        </nav>
+    </div>
+    <div class="navbar-right">
+        <div style="display:flex; align-items:center; gap:12px;"
+             th:if="${#authentication != null && #authentication.name != 'anonymousUser'}">
+            <div class="avatar"
+                 th:text="${#authentication.name.substring(0,1).toUpperCase()}">U</div>
+            <span class="user-name" th:text="${#authentication.name}">User</span>
+        </div>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="logout-btn">Sign Out</button>
+        </form>
+    </div>
+</header>
+</body>
+</html>

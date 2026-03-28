@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" lang="en">
+<body>
+<th:block th:fragment="scripts">
+    <!-- ✅ Global JS — every page gets this -->
+    <script th:src="@{/js/main.js}"></script>
+
+    <!-- ✅ Slot for page-specific JS -->
+    <th:block layout:fragment="extraScripts"></th:block>
+</th:block>
+</body>
+</html>

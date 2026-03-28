@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yahoo Login - Secure Access</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #410093 0%, #6001d2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #2d333a;
+            --text-muted: #626971;
+            --input-border: #e0e4e9;
+            --input-focus: #6001d2;
+            --yahoo-purple: #6001d2;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-gradient);
+            background-attachment: fixed;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: var(--text-main);
+        }
+
+        /* Ambient background bubbles */
+        .bubble {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            filter: blur(80px);
+            z-index: 0;
+            animation: move 20s infinite alternate linear;
+        }
+
+        .bubble-1 { top: -100px; left: -100px; }
+        .bubble-2 { bottom: -100px; right: -100px; animation-delay: -5s; }
+
+        @keyframes move {
+            from { transform: translate(0, 0); }
+            to { transform: translate(50px, 50px); }
+        }
+
+        .login-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: var(--glass-bg);
+            border-radius: 24px;
+            padding: 48px 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-section {
+            margin-bottom: 32px;
+        }
+
+        .logo-section h1 {
+            color: var(--yahoo-purple);
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1d2129;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            font-size: 15px;
+        }
+
+        /* Error Message Styles */
+        .error-message {
+            background: #fff0f0;
+            color: #d93025;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid #fecaca;
+        }
+
+        /* Logout Message Styles */
+        .logout-message {
+            background: #f0f7ff;
+            color: #1a73e8;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid #d2e3fc;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #f9fafb;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--input-focus);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(96, 1, 210, 0.1);
+        }
+
+        button {
+            width: 100%;
+            background: var(--yahoo-purple);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 4px 6px -1px rgba(96, 1, 210, 0.2);
+        }
+
+        button:hover {
+            background: #410093;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(96, 1, 210, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .footer {
+            margin-top: 32px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .footer a {
+            color: var(--yahoo-purple);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bubble bubble-1"></div>
+    <div class="bubble bubble-2"></div>
+
+    <div class="login-wrapper">
+        <div class="login-container">
+            <div class="logo-section">
+                <h1>YAHOO!</h1>
+            </div>
+
+            <h2>Sign in</h2>
+            <p class="subtitle">to continue to Yahoo Service</p>
+
+            <!-- Error and Logout alerts -->
+            <div th:if="${param.error}" class="error-message">
+                Invalid username or password. Please try again.
+            </div>
+            <div th:if="${param.logout}" class="logout-message">
+                You have been successfully logged out.
+            </div>
+
+            <form th:action="@{/user/login}" method="post">
+                <div class="input-group">
+                    <label for="username">Username or Email</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" name="username" placeholder="Username" required autofocus>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" placeholder="Password" required>
+                    </div>
+                </div>
+
+                <button type="submit">Sign in</button>
+            </form>
+
+            <div class="footer">
+                <p>New to Yahoo? <a href="/register">Create an account</a></p>
+                <div style="margin-top: 20px; font-size: 12px; opacity: 0.6;">
+                    &copy; 2025 Yahoo Inc.
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

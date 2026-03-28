@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}" lang="en">
+
+<!-- Extra CSS for this page only -->
+<th:block layout:fragment="extraHead">
+    <link rel="stylesheet" th:href="@{/css/chat.css}">
+</th:block>
+
+<body>
+<div layout:fragment="content">
+    <div class="chat-page-container">
+        <!-- Users Sidebar -->
+        <aside class="chat-sidebar">
+            <div class="sidebar-header">
+                <h2>Active Users</h2>
+            </div>
+            <ul class="user-list">
+                <li class="user-item active" th:each="user : ${users}">
+                    <div class="avatar">Y</div>
+                    <div>
+                        <div class="user-name" th:text="${user.username}"></div>
+                        <div style="font-size: 0.7rem; color: #4caf50;">Online</div>
+                    </div>
+                </li>
+
+
+            </ul>
+        </aside>
+
+        <!-- Chat Area -->
+        <section class="chat-main">
+            <header class="chat-header">
+                <div class="avatar">Y</div>
+                <div>
+                    <h3 style="font-size: 1rem;">Yahoo Support</h3>
+                    <span style="font-size: 0.7rem; color: #4caf50;">Online</span>
+                </div>
+            </header>
+
+            <div class="messages-container" id="messages">
+                <div class="message message-received">
+                    Welcome to the new Yahoo Chat! How can I help you today?
+                    <span class="message-info">10:00 AM</span>
+                </div>
+                <div class="message message-sent">
+                    Hi! I love the new premium look. It looks amazing!
+                    <span class="message-info">10:05 AM</span>
+                </div>
+                <div class="message message-received">
+                    Thank you! We've worked hard on the design. Feel free to explore all the features.
+                    <span class="message-info">10:06 AM</span>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <form id="chatForm" class="input-wrapper">
+                    <input type="text" class="chat-input" placeholder="Type a message..." aria-label="Message input">
+                    <button type="submit" class="send-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+<!-- Extra JS for this page only -->
+<th:block layout:fragment="extraScripts">
+    <!-- Inline script for simple demo functionality if chat.js is missing -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatForm = document.getElementById('chatForm');
+            const messagesContainer = document.getElementById('messages');
+            const input = chatForm.querySelector('input');
+
+            chatForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (input.value.trim()) {
+                    const now = new Date();
+                    const hours = now.getHours();
+                    const minutes = now.getMinutes().toString().padStart(2, '0');
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const time = (hours % 12 || 12) + ':' + minutes + ' ' + ampm;
+                    
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'message message-sent';
+                    msgDiv.innerHTML = `${input.value}<span class="message-info">${time}</span>`;
+                    
+                    messagesContainer.appendChild(msgDiv);
+                    input.value = '';
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>
