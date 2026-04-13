@@ -1,8 +1,12 @@
 package com.saadoun.yahoo.service;
 
+import com.saadoun.yahoo.model.entity.Conversation;
+import com.saadoun.yahoo.model.entity.ConversationParticipation;
 import com.saadoun.yahoo.model.entity.FriendRequest;
 import com.saadoun.yahoo.Enums.FriendRequestStatus;
 import com.saadoun.yahoo.model.entity.User;
+import com.saadoun.yahoo.repository.ConversationParticipationRepositoryInterface;
+import com.saadoun.yahoo.repository.ConversationRepositoryInterface;
 import com.saadoun.yahoo.repository.FriendRequestRepositoryInterface;
 import com.saadoun.yahoo.repository.UserRepositoryInterface;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +19,8 @@ import com.saadoun.yahoo.model.dto.response.FriendRequestResponseDTO;
 import com.saadoun.yahoo.model.dto.response.UserResponseDTO;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+
 
 @Service
 @Transactional
@@ -26,6 +32,12 @@ public class FriendRequestService {
 
     @Autowired
     private UserRepositoryInterface userRepository;
+
+    @Autowired
+    private ConversationRepositoryInterface conversationRepositoryInterface;
+
+    @Autowired
+    private ConversationParticipationRepositoryInterface conversationParticipationRepositoryInterface;
 
     public void sendFriendRequest(String receiverUsername) {
         String currentUsername = SecurityContextHolder
@@ -55,6 +67,29 @@ public class FriendRequestService {
                 .build();
 
         friendRequestRepository.save(friendRequest);
+
+        // create conversation
+        Conversation conversation  = Conversation.builder()
+                .name(null)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Conversation saveconversation = conversationRepositoryInterface.save(conversation);
+
+        ConversationParticipation conversationParticipation1 = ConversationParticipation.builder()
+                .conversationId(saveconversation.getId())
+                .userId(sender.getId())
+                .build();
+
+        conversationParticipationRepositoryInterface.save(conversationParticipation1);
+
+        ConversationParticipation conversationParticipation2 = ConversationParticipation.builder()
+                .conversationId(receiver.getId())
+                .userId(sender.getId())
+                .build();
+
+        conversationParticipationRepositoryInterface.save(conversationParticipation2);
+
     }
 
     public List<FriendRequestResponseDTO> getPendingRequests() {
@@ -93,6 +128,8 @@ public class FriendRequestService {
 
         request.setStatus(FriendRequestStatus.ACCEPTED);
         friendRequestRepository.save(request);
+
+
     }
 
     public void rejectFriendRequest(Long requestId) {

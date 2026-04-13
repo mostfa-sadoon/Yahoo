@@ -50,126 +50,127 @@
             <button type="submit" class="logout-btn">Sign Out</button>
         </form>
     </div>
-</header>
 
-<script th:if="${#authentication != null && #authentication.name != 'anonymousUser'}">
-    document.addEventListener("DOMContentLoaded", function() {
-        console.log("Navbar script initialized");
-        window.loadPendingRequests();
-    });
-
-    window.toggleNotificationDropdown = function() {
-        console.log("Toggling notification dropdown...");
-        const dropdown = document.getElementById("notification-dropdown");
-        if (!dropdown) {
-            console.error("Could not find notification-dropdown element");
-            return;
-        }
-        dropdown.classList.toggle("show");
-        if(dropdown.classList.contains("show")){
+    <script th:if="${#authentication != null && #authentication.name != 'anonymousUser'}">
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("Navbar script initialized");
             window.loadPendingRequests();
-        }
-    };
+        });
 
-    window.addEventListener('click', function(event) {
-        if (!event.target.closest('.notification-container')) {
-            const dropdown = document.getElementById('notification-dropdown');
-            if (dropdown && dropdown.classList.contains('show')) {
-                dropdown.classList.remove('show');
+        window.toggleNotificationDropdown = function() {
+            console.log("Toggling notification dropdown...");
+            const dropdown = document.getElementById("notification-dropdown");
+            if (!dropdown) {
+                console.error("Could not find notification-dropdown element");
+                return;
             }
-        }
-    });
+            dropdown.classList.toggle("show");
+            if(dropdown.classList.contains("show")){
+                window.loadPendingRequests();
+            }
+        };
 
-    window.loadPendingRequests = function() {
-        console.log("Fetching pending friend requests...");
-        fetch('/chat-api/friends/pending')
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
+        window.addEventListener('click', function(event) {
+            if (!event.target.closest('.notification-container')) {
+                const dropdown = document.getElementById('notification-dropdown');
+                if (dropdown && dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
                 }
-                return res.json();
-            })
-            .then(data => {
-                console.log("Successfully fetched requests:", data);
-                const badge = document.getElementById("notification-badge");
-                const list = document.getElementById("notification-list");
-                
-                if (badge) {
-                    if (data.length > 0) {
-                        badge.innerText = data.length;
-                        badge.style.display = 'flex';
-                    } else {
-                        badge.style.display = 'none';
+            }
+        });
+
+        window.loadPendingRequests = function() {
+            console.log("Fetching pending friend requests...");
+            fetch('/chat-api/friends/pending')
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
                     }
-                }
+                    return res.json();
+                })
+                .then(data => {
+                    console.log("Successfully fetched requests:", data);
+                    const badge = document.getElementById("notification-badge");
+                    const list = document.getElementById("notification-list");
+                    
+                    if (badge) {
+                        if (data.length > 0) {
+                            badge.innerText = data.length;
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
 
-                if (!list) {
-                    console.error("Could not find notification-list element");
-                    return;
-                }
-
-                list.innerHTML = '';
-                if (data.length === 0) {
-                    list.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">No pending requests</div>';
-                    return;
-                }
-
-                data.forEach(req => {
-                    if (!req.sender) {
-                        console.warn("Friend request missing sender info:", req);
+                    if (!list) {
+                        console.error("Could not find notification-list element");
                         return;
                     }
-                    const item = document.createElement('div');
-                    item.className = 'friend-request-item';
-                    item.innerHTML = `
-                        <div class="requester-info">
-                            <div class="avatar-small">${(req.sender.username || '?').charAt(0).toUpperCase()}</div>
-                            <div class="requester-details">
-                                <span class="req-username">${req.sender.username || 'Unknown'}</span>
-                                <span class="req-fullname">${req.sender.firstName || ''} ${req.sender.lastName || ''}</span>
-                            </div>
-                        </div>
-                        <div class="request-actions">
-                            <button class="btn-accept" title="Accept" onclick="handleRequest(${req.id}, 'accept', this)">✓</button>
-                            <button class="btn-reject" title="Reject" onclick="handleRequest(${req.id}, 'reject', this)">✕</button>
-                        </div>
-                    `;
-                    list.appendChild(item);
-                });
-            })
-            .catch(err => {
-                console.error("Error loading requests:", err);
-                const list = document.getElementById("notification-list");
-                if (list) {
-                    list.innerHTML = '<div style="padding: 1rem; text-align: center; color: #ff3b3b; font-size: 0.85rem;">Failed to load requests</div>';
-                }
-            });
-    };
 
-    window.handleRequest = function(requestId, action, btnElement) {
-        console.log(`Processing ${action} for request ${requestId}...`);
-        const item = btnElement.closest('.friend-request-item');
-        if (item) item.style.opacity = '0.5';
-        btnElement.disabled = true;
-        
-        fetch(`/chat-api/friends/${action}?requestId=${requestId}`, { method: 'POST' })
-            .then(res => {
-                if(res.ok) {
-                    console.log(`Request ${requestId} ${action}ed successfully`);
-                    if (item) item.remove();
-                    window.loadPendingRequests();
-                } else {
-                    throw new Error(`Failed to ${action} request`);
-                }
-            })
-            .catch(err => {
-                console.error(`Error ${action}ing request:`, err);
-                if (item) item.style.opacity = '1';
-                btnElement.disabled = false;
-                alert(`Error processing ${action} request.`);
-            });
-    };
-</script>
+                    list.innerHTML = '';
+                    if (data.length === 0) {
+                        list.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">No pending requests</div>';
+                        return;
+                    }
+
+                    data.forEach(req => {
+                        if (!req.sender) {
+                            console.warn("Friend request missing sender info:", req);
+                            return;
+                        }
+                        const item = document.createElement('div');
+                        item.className = 'friend-request-item';
+                        item.innerHTML = `
+                            <div class="requester-info">
+                                <div class="avatar-small">${(req.sender.username || '?').charAt(0).toUpperCase()}</div>
+                                <div class="requester-details">
+                                    <span class="req-username">${req.sender.username || 'Unknown'}</span>
+                                    <span class="req-fullname">${req.sender.firstName || ''} ${req.sender.lastName || ''}</span>
+                                </div>
+                            </div>
+                            <div class="request-actions">
+                                <button class="btn-accept" title="Accept" onclick="handleRequest(${req.id}, 'accept', this)">✓</button>
+                                <button class="btn-reject" title="Reject" onclick="handleRequest(${req.id}, 'reject', this)">✕</button>
+                            </div>
+                        `;
+                        list.appendChild(item);
+                    });
+                })
+                .catch(err => {
+                    console.error("Error loading requests:", err);
+                    const list = document.getElementById("notification-list");
+                    if (list) {
+                        list.innerHTML = '<div style="padding: 1rem; text-align: center; color: #ff3b3b; font-size: 0.85rem;">Failed to load requests</div>';
+                    }
+                });
+        };
+
+        window.handleRequest = function(requestId, action, btnElement) {
+            console.log(`Processing ${action} for request ${requestId}...`);
+            const item = btnElement.closest('.friend-request-item');
+            if (item) item.style.opacity = '0.5';
+            btnElement.disabled = true;
+            
+            fetch(`/chat-api/friends/${action}?requestId=${requestId}`, { method: 'POST' })
+                .then(res => {
+                    if(res.ok) {
+                        console.log(`Request ${requestId} ${action}ed successfully`);
+                        if (item) item.remove();
+                        window.loadPendingRequests();
+                    } else {
+                        throw new Error(`Failed to ${action} request`);
+                    }
+                })
+                .catch(err => {
+                    console.error(`Error ${action}ing request:`, err);
+                    if (item) item.style.opacity = '1';
+                    btnElement.disabled = false;
+                    alert(`Error processing ${action} request.`);
+                });
+        };
+    </script>
+</header>
+
 
 </body>
 </html>
