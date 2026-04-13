@@ -14,10 +14,23 @@
         <!-- Users Sidebar -->
         <aside class="chat-sidebar">
             <div class="sidebar-header">
-                <h2>Active Users</h2>
+                <h2>Users</h2>
+                <div class="search-container">
+                    <input type="text" id="user-search-input" placeholder="Search for users..." autocomplete="off">
+                </div>
             </div>
-            <ul class="user-list">
-                <li class="user-item active" th:each="user : ${users}">
+            
+            <div id="search-results-container" class="search-results" style="display: none;">
+                <!-- Search results will populate here -->
+            </div>
+            
+            <h3 id="active-users-heading" style="margin: 1rem 1rem 0 1rem; font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary);">Active Users</h3>
+            <ul class="user-list" id="active-users-list">
+                <li class="user-item"
+                    th:each="user : ${users}"
+                    th:data-username="${user.username}"
+                    onclick="selectUser(this.dataset.username)">
+
                     <div class="avatar">Y</div>
                     <div>
                         <div class="user-name" th:text="${user.username}"></div>
@@ -34,24 +47,24 @@
             <header class="chat-header">
                 <div class="avatar">Y</div>
                 <div>
-                    <h3 style="font-size: 1rem;">Yahoo Support</h3>
+                    <h3 id="chat-header-title" style="font-size: 1rem;">Yahoo Support</h3>
                     <span style="font-size: 0.7rem; color: #4caf50;">Online</span>
                 </div>
             </header>
 
             <div class="messages-container" id="messages">
-                <div class="message message-received">
-                    Welcome to the new Yahoo Chat! How can I help you today?
-                    <span class="message-info">10:00 AM</span>
-                </div>
-                <div class="message message-sent">
-                    Hi! I love the new premium look. It looks amazing!
-                    <span class="message-info">10:05 AM</span>
-                </div>
-                <div class="message message-received">
-                    Thank you! We've worked hard on the design. Feel free to explore all the features.
-                    <span class="message-info">10:06 AM</span>
-                </div>
+<!--                <div class="message message-received">-->
+<!--                    Welcome to the new Yahoo Chat! How can I help you today?-->
+<!--                    <span class="message-info">10:00 AM</span>-->
+<!--                </div>-->
+<!--                <div class="message message-sent">-->
+<!--                    Hi! I love the new premium look. It looks amazing!-->
+<!--                    <span class="message-info">10:05 AM</span>-->
+<!--                </div>-->
+<!--                <div class="message message-received">-->
+<!--                    Thank you! We've worked hard on the design. Feel free to explore all the features.-->
+<!--                    <span class="message-info">10:06 AM</span>-->
+<!--                </div>-->
             </div>
 
             <div class="chat-input-area">
@@ -72,32 +85,219 @@
 <!-- Extra JS for this page only -->
 <th:block layout:fragment="extraScripts">
     <!-- Inline script for simple demo functionality if chat.js is missing -->
+   
+    <!--   web socket script    -->
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+
+
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const chatForm = document.getElementById('chatForm');
+        let stompClient = null;
+        let currentConversationId = null; // group chat
+        let currentReceiver = null;       // private chat
+        let currentUsername = "[[${#authentication.name}]]";
+
+
+        function connect() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect(
+            { username: currentUsername },
+            function () {
+                console.log("Connected");
+
+                stompClient.subscribe('/user/queue/messages', function (message) {
+                    showMessage(JSON.parse(message.body));
+                });
+                 
+            });
+        }
+
+        function subscribeToConversation(conversationId) {
+
+            currentConversationId = conversationId;
+            currentReceiver = null;
+
+            stompClient.subscribe(
+                '/topic/conversation/' + conversationId,
+                function (message) {
+                    showMessage(JSON.parse(message.body));
+                }
+            );
+
+            clearMessages();
+        }
+
+        function selectUser(username) {
+            currentReceiver = username;
+            currentConversationId = null;
+
+            document.getElementById('chat-header-title').innerText = username;
+
+            clearMessages();
+        }
+
+       function sendMessage(content) {
+
+            // 🟢 GROUP MESSAGE
+            if (currentConversationId) {
+                stompClient.send("/app/chat.send", {}, JSON.stringify({
+                    content: content,
+                    senderUsername: currentUsername,
+                    conversationId: currentConversationId,
+                    isGroup: true
+                }));
+            }
+
+            // 🔵 PRIVATE MESSAGE
+            else if (currentReceiver) {
+                stompClient.send("/app/chat.send", {}, JSON.stringify({
+                    content: content,
+                    senderUsername: currentUsername,
+                    receiverUsername: currentReceiver,
+                    isGroup: false
+                }));
+            } else {
+                alert("Select user or conversation first");
+            }
+        }
+
+        function showMessage(message) {
             const messagesContainer = document.getElementById('messages');
+
+            const msgDiv = document.createElement('div');
+
+            if (message.senderUsername === currentUsername) {
+                msgDiv.className = 'message message-sent';
+            } else {
+                msgDiv.className = 'message message-received';
+            }
+
+            msgDiv.innerHTML = `
+                ${message.content}
+                <span class="message-info">${message.senderUsername}</span>
+            `;
+
+            messagesContainer.appendChild(msgDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // clear chat area when switching conversations or users
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+
+        
+       document.addEventListener('DOMContentLoaded', () => {
+            connect();
+
+            const chatForm = document.getElementById('chatForm');
             const input = chatForm.querySelector('input');
 
             chatForm.addEventListener('submit', (e) => {
                 e.preventDefault();
+
                 if (input.value.trim()) {
-                    const now = new Date();
-                    const hours = now.getHours();
-                    const minutes = now.getMinutes().toString().padStart(2, '0');
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
-                    const time = (hours % 12 || 12) + ':' + minutes + ' ' + ampm;
-                    
-                    const msgDiv = document.createElement('div');
-                    msgDiv.className = 'message message-sent';
-                    msgDiv.innerHTML = `${input.value}<span class="message-info">${time}</span>`;
-                    
-                    messagesContainer.appendChild(msgDiv);
+                    sendMessage(input.value);
                     input.value = '';
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 }
             });
+
+            // User Search Logic
+            const searchInput = document.getElementById('user-search-input');
+            const searchResultsContainer = document.getElementById('search-results-container');
+            const activeUsersList = document.getElementById('active-users-list');
+            const activeUsersHeading = document.getElementById('active-users-heading');
+
+            let searchTimeout = null;
+
+            searchInput.addEventListener('input', (e) => {
+                const keyword = e.target.value.trim();
+                
+                clearTimeout(searchTimeout);
+                
+                if (keyword === '') {
+                    searchResultsContainer.style.display = 'none';
+                    activeUsersList.style.display = 'block';
+                    activeUsersHeading.style.display = 'block';
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    fetch(`/chat-api/users/search?keyword=${encodeURIComponent(keyword)}`)
+                        .then(response => response.json())
+                        .then(users => {
+                            displaySearchResults(users);
+                        })
+                        .catch(error => console.error('Error searching users:', error));
+                }, 300); // debounce 300ms
+            });
+
+            function displaySearchResults(users) {
+                searchResultsContainer.innerHTML = '';
+                activeUsersList.style.display = 'none';
+                activeUsersHeading.style.display = 'none';
+                searchResultsContainer.style.display = 'flex';
+                searchResultsContainer.style.flexDirection = 'column';
+
+                if (users.length === 0) {
+                    searchResultsContainer.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-secondary);">No users found.</div>';
+                    return;
+                }
+
+                users.forEach(user => {
+                    const item = document.createElement('div');
+                    item.className = 'search-result-item';
+                    item.innerHTML = `
+                        <div class="user-info">
+                            <div class="avatar">${user.username.charAt(0).toUpperCase()}</div>
+                            <div class="details">
+                                <div class="user-name">${user.username}</div>
+                                <div class="user-full-name" style="font-size: 0.75rem; color: var(--text-secondary);">${(user.firstName || '') + ' ' + (user.lastName || '')}</div>
+                            </div>
+                        </div>
+                        <button class="add-friend-btn" onclick="sendFriendRequest(this, '${user.username}')">Add Friend</button>
+                    `;
+                    searchResultsContainer.appendChild(item);
+                });
+            }
+
+            window.sendFriendRequest = function(btn, username) {
+                btn.disabled = true;
+                btn.innerText = 'Sending...';
+
+                fetch(`/chat-api/friends/request?receiverUsername=${encodeURIComponent(username)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(async response => {
+                    if (response.ok) {
+                        btn.innerText = 'Request Sent';
+                        btn.classList.add('success');
+                    } else {
+                        const err = await response.json();
+                        alert('Error: ' + err.error);
+                        btn.disabled = false;
+                        btn.innerText = 'Add Friend';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    btn.disabled = false;
+                    btn.innerText = 'Add Friend';
+                });
+            };
         });
     </script>
+
+
+
+
 </th:block>
 </body>
 </html>

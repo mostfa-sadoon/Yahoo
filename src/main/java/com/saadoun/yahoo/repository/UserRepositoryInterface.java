@@ -4,6 +4,7 @@ import com.saadoun.yahoo.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -14,4 +15,7 @@ public interface UserRepositoryInterface extends JpaRepository<User,Long> {
     public Boolean existsByEmail(String Email);
     public Boolean existsByUsername(String UserName);
 
+    List<User> findByIdNot(Long id);
+    List<User> findByUsernameNot(String username);
+    List<User> findByUsernameContainingIgnoreCaseAndUsernameNot(String keyword, String username);
 }

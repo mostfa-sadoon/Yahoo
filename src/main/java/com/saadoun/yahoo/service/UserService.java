@@ -5,9 +5,12 @@ import com.saadoun.yahoo.model.entity.User;
 import com.saadoun.yahoo.repository.UserRepositoryInterface;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.saadoun.yahoo.model.dto.response.UserResponseDTO;
+import java.util.stream.Collectors;
 import java.util.List;
 
 @Service
@@ -41,6 +44,29 @@ public class UserService {
     }
 
     public List<User> getAllUsers(){
-        return  userRepositoryInterface.findAll();
+        String username = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+        return  userRepositoryInterface.findByUsernameNot(username);
+    }
+
+    public List<UserResponseDTO> searchUsers(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return List.of();
+        }
+        String currentUsername = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+        return userRepositoryInterface.findByUsernameContainingIgnoreCaseAndUsernameNot(keyword, currentUsername)
+                .stream()
+                .map(user -> UserResponseDTO.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .firstName(user.getFirst_name())
+                        .lastName(user.getLast_name())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

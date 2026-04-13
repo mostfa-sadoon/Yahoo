@@ -74,6 +74,7 @@ public class Security {
     @Bean
     public SecurityFilterChain webSecurity(HttpSecurity http) throws Exception {
         http
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/chat-api/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/user/login", "/register", "/css/**", "/js/**", "/images/**", "/error").permitAll()
                         .anyRequest().authenticated()
