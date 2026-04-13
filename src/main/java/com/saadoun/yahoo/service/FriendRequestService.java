@@ -68,28 +68,6 @@ public class FriendRequestService {
 
         friendRequestRepository.save(friendRequest);
 
-        // create conversation
-        Conversation conversation  = Conversation.builder()
-                .name(null)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        Conversation saveconversation = conversationRepositoryInterface.save(conversation);
-
-        ConversationParticipation conversationParticipation1 = ConversationParticipation.builder()
-                .conversationId(saveconversation.getId())
-                .userId(sender.getId())
-                .build();
-
-        conversationParticipationRepositoryInterface.save(conversationParticipation1);
-
-        ConversationParticipation conversationParticipation2 = ConversationParticipation.builder()
-                .conversationId(receiver.getId())
-                .userId(sender.getId())
-                .build();
-
-        conversationParticipationRepositoryInterface.save(conversationParticipation2);
-
     }
 
     public List<FriendRequestResponseDTO> getPendingRequests() {
@@ -129,6 +107,27 @@ public class FriendRequestService {
         request.setStatus(FriendRequestStatus.ACCEPTED);
         friendRequestRepository.save(request);
 
+        // create conversation
+        Conversation conversation  = Conversation.builder()
+                .name(null)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Conversation saveconversation = conversationRepositoryInterface.save(conversation);
+
+        ConversationParticipation conversationParticipation1 = ConversationParticipation.builder()
+                .conversationId(saveconversation.getId())
+                .userId(request.getSender().getId())
+                .build();
+
+        conversationParticipationRepositoryInterface.save(conversationParticipation1);
+
+        ConversationParticipation conversationParticipation2 = ConversationParticipation.builder()
+                .conversationId(saveconversation.getId())
+                .userId(request.getReceiver().getId())
+                .build();
+
+        conversationParticipationRepositoryInterface.save(conversationParticipation2);
 
     }
 
