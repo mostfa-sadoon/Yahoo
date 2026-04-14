@@ -27,13 +27,13 @@
             <h3 id="active-users-heading" style="margin: 1rem 1rem 0 1rem; font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary);">Active Users</h3>
             <ul class="user-list" id="active-users-list">
                 <li class="user-item"
-                    th:each="user : ${users}"
-                    th:data-username="${user.username}"
+                    th:each="conv : ${privateConversations}"
+                    th:data-username="${conv.otherUserUsername}"
                     onclick="selectUser(this.dataset.username)">
 
                     <div class="avatar">Y</div>
                     <div>
-                        <div class="user-name" th:text="${user.username}"></div>
+                        <div class="user-name" th:text="${conv.otherUserFirstName() + ' ' + conv.otherUserLastName()}"></div>
                         <div style="font-size: 0.7rem; color: #4caf50;">Online</div>
                     </div>
                 </li>
