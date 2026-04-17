@@ -33,6 +33,8 @@ public class Security {
         return new BCryptPasswordEncoder();
     }
 
+    // this is logic that check credential
+    // get user compare password using bcrypt hashing algorithm
     @Bean
     public DaoAuthenticationProvider authProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailesService);
@@ -40,6 +42,7 @@ public class Security {
         return provider;
     }
 
+    // this main entry point for auth
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         System.out.println("Authenticating...");

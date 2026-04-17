@@ -19,17 +19,18 @@
                     <input type="text" id="user-search-input" placeholder="Search for users..." autocomplete="off">
                 </div>
             </div>
-            
+
             <div id="search-results-container" class="search-results" style="display: none;">
                 <!-- Search results will populate here -->
             </div>
-            
+
             <h3 id="active-users-heading" style="margin: 1rem 1rem 0 1rem; font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary);">Active Users</h3>
             <ul class="user-list" id="active-users-list">
                 <li class="user-item"
                     th:each="conv : ${privateConversations}"
                     th:data-username="${conv.otherUserUsername}"
-                    onclick="selectUser(this.dataset.username)">
+                    th:data-conversation-id="${conv.conversationId}"
+                    onclick="selectUser(this.dataset.username, this.dataset.conversationId)">
 
                     <div class="avatar">Y</div>
                     <div>
@@ -85,7 +86,7 @@
 <!-- Extra JS for this page only -->
 <th:block layout:fragment="extraScripts">
     <!-- Inline script for simple demo functionality if chat.js is missing -->
-   
+
     <!--   web socket script    -->
 
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
@@ -98,6 +99,7 @@
         let currentConversationId = null; // group chat
         let currentReceiver = null;       // private chat
         let currentUsername = "[[${#authentication.name}]]";
+       let currentUserId = [[${#authentication.principal.id}]];
 
 
         function connect() {
@@ -112,7 +114,7 @@
                 stompClient.subscribe('/user/queue/messages', function (message) {
                     showMessage(JSON.parse(message.body));
                 });
-                 
+
             });
         }
 
@@ -131,13 +133,28 @@
             clearMessages();
         }
 
-        function selectUser(username) {
+   function selectUser(username, conversationId = null) {
             currentReceiver = username;
             currentConversationId = null;
 
             document.getElementById('chat-header-title').innerText = username;
-
             clearMessages();
+
+            if (conversationId) {
+                loadHistoryByConversation(conversationId);
+            } else {
+                fetch(`/chat-api/conversation/resolve?with=${encodeURIComponent(username)}`)
+                    .then(res => res.json())
+                    .then(data => loadHistoryByConversation(data.conversationId))
+                    .catch(err => console.error('Failed to resolve conversation:', err));
+            }
+        }
+
+        function loadHistoryByConversation(conversationId) {
+            fetch(`/messages?conversationId=${conversationId}`)
+                .then(res => res.json())
+                .then(messages => messages.forEach(msg => showMessage(msg)))
+                .catch(err => console.error('Failed to load history:', err));
         }
 
        function sendMessage(content) {
@@ -166,11 +183,12 @@
         }
 
         function showMessage(message) {
+
             const messagesContainer = document.getElementById('messages');
 
             const msgDiv = document.createElement('div');
 
-            if (message.senderUsername === currentUsername) {
+            if (message.senderId === currentUserId) {
                 msgDiv.className = 'message message-sent';
             } else {
                 msgDiv.className = 'message message-received';
@@ -178,19 +196,19 @@
 
             msgDiv.innerHTML = `
                 ${message.content}
-                <span class="message-info">${message.senderUsername}</span>
+                <span class="message-info">${message.createdAt}</span>
             `;
 
             messagesContainer.appendChild(msgDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
-        
+
         // clear chat area when switching conversations or users
         function clearMessages() {
             document.getElementById('messages').innerHTML = '';
         }
 
-        
+
        document.addEventListener('DOMContentLoaded', () => {
             connect();
 
@@ -216,9 +234,9 @@
 
             searchInput.addEventListener('input', (e) => {
                 const keyword = e.target.value.trim();
-                
+
                 clearTimeout(searchTimeout);
-                
+
                 if (keyword === '') {
                     searchResultsContainer.style.display = 'none';
                     activeUsersList.style.display = 'block';

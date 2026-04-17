@@ -38,6 +38,10 @@ public class AuthController {
        Authentication auth = authenticationManager.authenticate(
                new UsernamePasswordAuthenticationToken(dto.getUsername(),dto.getPassword())
        );
+       if (!auth.isAuthenticated()) {
+           throw new RuntimeException("Invalid login");
+       }
+
        String token = jwtUtil.generateToken(dto.getUsername());
        Token jwtTokwn = new Token();
        jwtTokwn.token = token;

@@ -30,6 +30,7 @@ public class HomeController {
        List<PrivateConversationDTO> privateConversations = conversationService.getPrivateConversations(authUserId);
        model.addAttribute("users",userService.getAllUsers());
        model.addAttribute("privateConversations",privateConversations);
+       model.addAttribute("user_id",authUserId);
        return "chat";
    }
 
