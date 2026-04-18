@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class ChatController {
@@ -35,13 +37,14 @@ public class ChatController {
 
 
     @MessageMapping("/chat.send")
-    public  void sendMessage(MessageDTO message,Principal principal){
+    public  void sendMessage(MessageDTO message, SimpMessageHeaderAccessor headerAccessor){
 
         System.out.println("message is sent success");
         System.out.println("Message dto is"+ message.toString());
 
-
-        com.saadoun.yahoo.model.entity.Message messageentity =  messageService.save(message,principal);
+        Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
+        Long userId = (Long) sessionAttributes.get("userId");
+        com.saadoun.yahoo.model.entity.Message messageentity =  messageService.save(message,userId);
 
         if(message.isGroup()){
             messagingTemplate.convertAndSend(

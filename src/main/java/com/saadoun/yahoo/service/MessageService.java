@@ -31,17 +31,11 @@ public class MessageService {
    @Autowired
    ConversationParticipationRepositoryInterface convParticipationRepository;
 
-   public Message save(MessageDTO dto, Principal principal){
+   public Message save(MessageDTO dto, Long UserId){
        System.out.println("string of dto"+dto.toString());
 
-
-       String username = principal.getName();
-       User user = userRepositoryInterface
-               .findByUsername(username)
-               .orElseThrow();
-
        boolean  exists = convParticipationRepository
-               .existsByConversationIdAndUserId(dto.getConversationId(), user.getId());
+               .existsByConversationIdAndUserId(dto.getConversationId(), UserId);
 
        if (!exists) {
            throw new RuntimeException("User is not allowed to send message in this conversation");
@@ -49,7 +43,7 @@ public class MessageService {
 
        Message message = Message.builder()
                .content(dto.getContent())
-               .senderId(user.getId())
+               .senderId(UserId)
                .receiverId(dto.getReceiverId())
                .conversationId(dto.getConversationId())
                .createdAt(LocalDateTime.now())
