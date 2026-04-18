@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -30,11 +31,17 @@ public class MessageService {
    @Autowired
    ConversationParticipationRepositoryInterface convParticipationRepository;
 
-   public Message save(MessageDTO dto,Long userId){
+   public Message save(MessageDTO dto, Principal principal){
        System.out.println("string of dto"+dto.toString());
 
+
+       String username = principal.getName();
+       User user = userRepositoryInterface
+               .findByUsername(username)
+               .orElseThrow();
+
        boolean  exists = convParticipationRepository
-               .existsByConversationIdAndUserId(dto.getConversationId(), userId);
+               .existsByConversationIdAndUserId(dto.getConversationId(), user.getId());
 
        if (!exists) {
            throw new RuntimeException("User is not allowed to send message in this conversation");
@@ -42,7 +49,7 @@ public class MessageService {
 
        Message message = Message.builder()
                .content(dto.getContent())
-               .senderId(userId)
+               .senderId(user.getId())
                .receiverId(dto.getReceiverId())
                .conversationId(dto.getConversationId())
                .createdAt(LocalDateTime.now())

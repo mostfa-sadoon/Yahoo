@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.security.Principal;
 import java.util.List;
 
 @Controller
@@ -26,8 +27,6 @@ public class ChatController {
     @Autowired
     MessageService messageService;
 
-
-
     @MessageMapping("/chat.sendMessage")
     @SendTo("/topic/public")
     public Message sendMessage(Message message) {
@@ -36,12 +35,13 @@ public class ChatController {
 
 
     @MessageMapping("/chat.send")
-    public  void sendMessage(MessageDTO message, @AuthenticationPrincipal CustomUserDetails user){
+    public  void sendMessage(MessageDTO message,Principal principal){
 
         System.out.println("message is sent success");
         System.out.println("Message dto is"+ message.toString());
 
-        com.saadoun.yahoo.model.entity.Message messageentity =  messageService.save(message,user.getId());
+
+        com.saadoun.yahoo.model.entity.Message messageentity =  messageService.save(message,principal);
 
         if(message.isGroup()){
             messagingTemplate.convertAndSend(
