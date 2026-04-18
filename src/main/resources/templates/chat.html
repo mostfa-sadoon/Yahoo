@@ -30,7 +30,8 @@
                     th:each="conv : ${privateConversations}"
                     th:data-username="${conv.otherUserUsername}"
                     th:data-conversation-id="${conv.conversationId}"
-                    onclick="selectUser(this.dataset.username, this.dataset.conversationId)">
+                    th:data-other-user-id="${conv.otherUserId}"
+                    onclick="selectUser(this.dataset.username, this.dataset.conversationId , this.dataset.otherUserId)">
 
                     <div class="avatar">Y</div>
                     <div>
@@ -98,9 +99,10 @@
         let stompClient = null;
         let currentConversationId = null; // group chat
         let currentReceiver = null;       // private chat
+        let currentReceiverId = null;     // private chat receiver ID (optional, can be resolved by server)
         let currentUsername = "[[${#authentication.name}]]";
-       let currentUserId = [[${#authentication.principal.id}]];
-
+        let currentUserId   =  Number([[${#authentication.principal.id}]]);
+        let privateConversation = false;
 
         function connect() {
             const socket = new SockJS('/ws');
@@ -133,9 +135,11 @@
             clearMessages();
         }
 
-   function selectUser(username, conversationId = null) {
+   function selectUser(username, conversationId = null, otherUserId = null,private=true) {
             currentReceiver = username;
-            currentConversationId = null;
+            currentConversationId = conversationId;
+            currentReceiverId = otherUserId ? Number(otherUserId) : null; // will be resolved by server
+            privateConversation = private;
 
             document.getElementById('chat-header-title').innerText = username;
             clearMessages();
@@ -158,21 +162,23 @@
         }
 
        function sendMessage(content) {
-
             // 🟢 GROUP MESSAGE
-            if (currentConversationId) {
+            if (!privateConversation) {
                 stompClient.send("/app/chat.send", {}, JSON.stringify({
                     content: content,
                     senderUsername: currentUsername,
                     conversationId: currentConversationId,
                     isGroup: true
                 }));
-            }
+            }   
 
             // 🔵 PRIVATE MESSAGE
-            else if (currentReceiver) {
+            else if (privateConversation) {
                 stompClient.send("/app/chat.send", {}, JSON.stringify({
                     content: content,
+                    senderId: currentUserId,
+                    conversationId: currentConversationId,
+                    receiverId: currentReceiverId, // server will resolve based on username
                     senderUsername: currentUsername,
                     receiverUsername: currentReceiver,
                     isGroup: false

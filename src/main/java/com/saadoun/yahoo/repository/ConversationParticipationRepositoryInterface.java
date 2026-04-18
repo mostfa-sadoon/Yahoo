@@ -28,4 +28,6 @@ public interface ConversationParticipationRepositoryInterface extends JpaReposit
                                     AND otherP.userId != :authUserId
            """)
     List<PrivateConversationDTO> findPrivateConversationsForUser(@Param("authUserId") Long authIserId);
+
+    boolean existsByConversationIdAndUserId(Long conversationId, Long userId);
 }
