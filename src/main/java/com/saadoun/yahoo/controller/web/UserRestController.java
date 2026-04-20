@@ -61,4 +61,9 @@ public class UserRestController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @GetMapping("/friends")
+    public ResponseEntity<List<UserResponseDTO>> getFriends() {
+        return ResponseEntity.ok(friendRequestService.getFriends());
+    }
 }

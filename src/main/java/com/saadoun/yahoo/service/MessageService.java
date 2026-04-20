@@ -47,6 +47,7 @@ public class MessageService {
                .receiverId(dto.getReceiverId())
                .conversationId(dto.getConversationId())
                .createdAt(LocalDateTime.now())
+               .isGroup(dto.isGroup())
                .build();
        Message saveedMessage = messageRepositoryInterface.save(message);
        return  saveedMessage;

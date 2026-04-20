@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class MessageDTO {
     private Long conversationId;
-    private boolean isGroup;
+    private boolean Group;
     private String content;
     private String sender;
     private Long senderId;

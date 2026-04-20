@@ -47,6 +47,7 @@ public class ChatController {
         com.saadoun.yahoo.model.entity.Message messageentity =  messageService.save(message,userId);
 
         if(message.isGroup()){
+
             messagingTemplate.convertAndSend(
                     "/topic/conversation/" + message.getConversationId(),
                     messageentity

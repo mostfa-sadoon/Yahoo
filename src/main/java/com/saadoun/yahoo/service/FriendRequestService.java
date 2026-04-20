@@ -142,4 +142,22 @@ public class FriendRequestService {
 
         friendRequestRepository.delete(request);
     }
+
+    public List<UserResponseDTO> getFriends() {
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<FriendRequest> acceptedRequests = friendRequestRepository.findAcceptedFriends(currentUser);
+
+        return acceptedRequests.stream().map(req -> {
+            User friend = req.getSender().getId().equals(currentUser.getId()) ? req.getReceiver() : req.getSender();
+            return UserResponseDTO.builder()
+                    .id(friend.getId())
+                    .username(friend.getUsername())
+                    .firstName(friend.getFirst_name())
+                    .lastName(friend.getLast_name())
+                    .build();
+        }).collect(Collectors.toList());
+    }
 }

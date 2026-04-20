@@ -4,6 +4,8 @@ import com.saadoun.yahoo.Enums.FriendRequestStatus;
 import com.saadoun.yahoo.model.entity.FriendRequest;
 import com.saadoun.yahoo.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -16,4 +18,11 @@ public interface FriendRequestRepositoryInterface extends JpaRepository<FriendRe
     boolean existsBySenderAndReceiver(User sender, User receiver);
     
     java.util.List<FriendRequest> findByReceiverAndStatus(User receiver, FriendRequestStatus status);
+
+    @Query("""
+            SELECT fr FROM FriendRequest fr 
+            WHERE (fr.sender = :user OR fr.receiver = :user) 
+            AND fr.status = 'ACCEPTED'
+            """)
+    java.util.List<FriendRequest> findAcceptedFriends(@Param("user") User user);
 }

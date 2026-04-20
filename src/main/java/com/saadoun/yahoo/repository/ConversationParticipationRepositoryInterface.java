@@ -1,5 +1,6 @@
 package com.saadoun.yahoo.repository;
 
+import com.saadoun.yahoo.model.dto.response.GroupConversationDTO;
 import com.saadoun.yahoo.model.dto.response.PrivateConversationDTO;
 import com.saadoun.yahoo.model.entity.ConversationParticipation;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,6 +29,19 @@ public interface ConversationParticipationRepositoryInterface extends JpaReposit
                                     AND otherP.userId != :authUserId
            """)
     List<PrivateConversationDTO> findPrivateConversationsForUser(@Param("authUserId") Long authIserId);
+
+    @Query("""
+            SELECT new com.saadoun.yahoo.model.dto.response.GroupConversationDTO(
+                               c.id,
+                               c.name,
+                               (SELECT COUNT(p2) FROM ConversationParticipation p2 WHERE p2.conversationId = c.id)
+                           )
+                            FROM ConversationParticipation p
+                                   JOIN Conversation c ON c.id = p.conversationId
+                                   WHERE p.userId = :authUserId
+                                     AND c.isGroup = true
+            """)
+    List<GroupConversationDTO> findGroupConversationsForUser(@Param("authUserId") Long authUserId);
 
     boolean existsByConversationIdAndUserId(Long conversationId, Long userId);
 }

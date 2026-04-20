@@ -1,5 +1,6 @@
 package com.saadoun.yahoo.controller.web;
 
+import com.saadoun.yahoo.model.dto.response.GroupConversationDTO;
 import com.saadoun.yahoo.model.dto.response.PrivateConversationDTO;
 import com.saadoun.yahoo.security.CustomUserDetails;
 import com.saadoun.yahoo.security.UserDetailesService;
@@ -28,8 +29,10 @@ public class HomeController {
     public String home(Model model , @AuthenticationPrincipal CustomUserDetails userDetails){
        Long authUserId = userDetails.getId();
        List<PrivateConversationDTO> privateConversations = conversationService.getPrivateConversations(authUserId);
+       List<GroupConversationDTO> groupConversations = conversationService.getGroupConversations(authUserId);
        model.addAttribute("users",userService.getAllUsers());
        model.addAttribute("privateConversations",privateConversations);
+       model.addAttribute("groupConversations",groupConversations);
        model.addAttribute("user_id",authUserId);
        return "chat";
    }

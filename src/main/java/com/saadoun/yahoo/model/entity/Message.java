@@ -30,7 +30,7 @@ public class Message {
     @Column(name = "sender_id", nullable = false)
     private Long senderId;
 
-    @Column(name = "reciver_id", nullable = false)
+    @Column(name = "reciver_id", nullable = true)
     private Long receiverId;
 
     @Column(columnDefinition = "TEXT")
