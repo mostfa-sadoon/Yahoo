@@ -1,6 +1,7 @@
 package com.saadoun.yahoo.controller.web;
 
 import com.saadoun.yahoo.model.dto.response.MessageView;
+import com.saadoun.yahoo.model.dto.response.MessageViewDto;
 import com.saadoun.yahoo.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +17,7 @@ public class MessageRestController {
     MessageService messageService;
 
     @GetMapping("messages")
-    public List<MessageView> getMessages(@RequestParam Long conversationId){
+    public List<MessageViewDto> getMessages(@RequestParam Long conversationId){
         return  messageService.getConversationMessages(conversationId);
     }
 

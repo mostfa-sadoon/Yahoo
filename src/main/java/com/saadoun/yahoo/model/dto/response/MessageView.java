@@ -1,5 +1,7 @@
 package com.saadoun.yahoo.model.dto.response;
 
+import lombok.Data;
+
 import java.time.LocalDateTime;
 
 public interface MessageView {
